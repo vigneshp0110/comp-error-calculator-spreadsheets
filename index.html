@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spreadsheet Comp Cost Calculator | Everstage</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F9FBF9;color:#30312F}
+input[type=range]{width:100%;accent-color:#072A6C;cursor:pointer}
+.bench-note{font-size:10px;color:#5B6A7A;margin-top:5px;padding:4px 9px;background:#F0F4F9;border-left:2px solid #48C39E;border-radius:0 4px 4px 0;line-height:1.5}
+input[type=number],input[type=email]{font-family:inherit}
+button{font-family:inherit;cursor:pointer}
+
+/* ── Hero ──────────────────────────────────────── */
+.hero{background:linear-gradient(135deg,#072A6C 0%,#151F34 55%,#48C39E 100%);padding:28px 32px 32px;color:#fff}
+.hero-inner{max-width:1240px;margin:0 auto}
+.logo{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+/* logo-text removed — using img logo */
+.hero h1{font-size:28px;font-weight:900;margin:0 0 8px;line-height:1.2}
+.hero p{font-size:14px;opacity:.85;max-width:540px;line-height:1.6;margin:0}
+.trust-strip{background:rgba(255,255,255,.08);border-top:1px solid rgba(255,255,255,.12);margin-top:20px}
+.trust-inner{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;padding:10px 0}
+.trust-item{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,.82);font-weight:500;padding:4px 0;position:relative}
+.trust-item:not(:first-child)::before{content:'';position:absolute;left:-13px;top:50%;transform:translateY(-50%);height:14px;width:1px;background:rgba(255,255,255,.22)}
+.trust-dot{width:18px;height:18px;border-radius:50%;background:rgba(43,181,160,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── App Layout ─────────────────────────────────── */
+.app{max-width:1240px;margin:0 auto;padding:28px 32px 64px;display:grid;grid-template-columns:370px 1fr;gap:28px;align-items:start}
+
+/* ── Sidebar ─────────────────────────────────────── */
+.sidebar{position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto;background:#fff;border:1px solid #E5E7EB;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+/* Hide scrollbar but keep scroll */
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-track{background:transparent}
+.sidebar::-webkit-scrollbar-thumb{background:#E5E7EB;border-radius:4px}
+
+/* Sidebar sections */
+.sb-section{padding:20px 20px 0}
+.sb-section:last-child{padding-bottom:20px}
+.sb-divider{height:1px;background:#F0F1F3;margin:0 20px}
+.sb-title{font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.9px;margin:0 0 14px;display:flex;align-items:center;gap:7px}
+.sb-title::after{content:'';flex:1;height:1px;background:#F0F1F3}
+
+/* Compact field styles */
+.f{margin-bottom:13px}
+.f:last-child{margin-bottom:0}
+.f label{display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:4px}
+.f-row{display:flex;align-items:center;border:1.5px solid #E5E7EB;border-radius:7px;overflow:hidden;background:#fff;transition:border-color .2s}
+.f-row:focus-within{border-color:#072A6C}
+.fa{padding:0 8px;font-size:11px;color:#9CA3AF;background:#F9FAFB;border-right:1px solid #E5E7EB;line-height:34px;white-space:nowrap}
+.fa.r{border-right:none;border-left:1px solid #E5E7EB}
+.f-row input[type=number]{border:none;outline:none;padding:0 10px;font-size:12px;font-weight:600;flex:1;height:34px;background:#fff;-moz-appearance:textfield;min-width:0}
+.f-row input[type=number]::-webkit-outer-spin-button,.f-row input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+/* Slider field */
+.sf{margin-bottom:13px}
+.sf:last-child{margin-bottom:0}
+.sf-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.sf-label{font-size:11px;font-weight:600;color:#374151}
+.sf-val{font-size:12px;font-weight:700;color:#072A6C;background:#EEF4ED;padding:1px 7px;border-radius:4px}
+input[type=range].compact{height:3px;margin:0}
+.sf-range{display:flex;justify-content:space-between;font-size:9px;color:#9CA3AF;margin-top:2px}
+
+/* Derived mini grid */
+.derived{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px;margin-bottom:4px}
+.dc{background:#F9FBF9;border-radius:7px;padding:8px 10px}
+.dc-lbl{font-size:9px;color:#9CA3AF;margin-bottom:1px;text-transform:uppercase;letter-spacing:.3px}
+.dc-val{font-size:13px;font-weight:700;color:#30312F}
+
+/* ICM buttons */
+.icm-btn{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;border:1.5px solid #E5E7EB;background:#fff;cursor:pointer;text-align:left;width:100%;margin-bottom:7px;transition:all .15s}
+.icm-btn:last-child{margin-bottom:0}
+.icm-btn.sel{border-color:#072A6C;background:#EEF4ED}
+.icm-radio{width:14px;height:14px;border-radius:50%;border:2px solid #D1D5DB;background:#fff;flex-shrink:0;transition:border .15s}
+.icm-btn.sel .icm-radio{border:4px solid #072A6C}
+.icm-name{font-size:11px;font-weight:600;color:#30312F;line-height:1.3}
+.icm-desc{font-size:10px;color:#9CA3AF;margin-top:1px}
+
+/* ── Results Panel ──────────────────────────────── */
+.results{min-width:0}
+.panel-label{font-size:10px;font-weight:700;color:#072A6C;text-transform:uppercase;letter-spacing:.9px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.panel-label::after{content:'';flex:1;height:1px;background:#E5E7EB}
+
+/* Stat cards */
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px}
+.stat-card{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sc-lbl{font-size:10px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.sc-val{font-size:26px;font-weight:800;line-height:1.1}
+.sc-sub{font-size:11px;color:#9CA3AF;margin-top:4px}
+
+/* Gate */
+.gate-wrap{position:relative}
+.blurred{filter:blur(5px) saturate(.4);pointer-events:none;user-select:none;opacity:.6}
+.gate-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(247,248,250,0) 0%,rgba(247,248,250,.65) 30%,rgba(247,248,250,.99) 100%);pointer-events:none}
+.gate-card-wrap{position:relative;z-index:10;max-width:680px;margin:0 auto;padding-top:24px}
+.gate-card{background:#fff;border:1px solid #E5E7EB;border-radius:16px;padding:26px 28px;box-shadow:0 8px 32px rgba(7,42,108,.11)}
+.gate-layout{display:flex;gap:24px;align-items:flex-start}
+.gate-preview{flex-shrink:0;width:170px;border-radius:8px;overflow:hidden;box-shadow:0 4px 16px rgba(7,42,108,.18);border:1px solid #E5E7EB}
+.gate-content{flex:1;min-width:0}
+.gate-icon{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#072A6C,#48C39E);margin:0 0 12px;display:flex;align-items:center;justify-content:center}
+.gate-logo{margin:0 0 14px}
+.gate-form-row{display:flex;gap:8px;align-items:flex-start}
+.gate-form-row .email-inp{flex:1;min-width:0;margin-bottom:0}
+.gate-form-row .submit-btn{width:auto;white-space:nowrap;padding:11px 20px;flex-shrink:0}
+.gate-preview-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.gate-preview-trust{font-size:10px;color:#9CA3AF;margin-top:10px;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.gate-preview-trust-dots{display:flex;gap:2px}
+.gate-preview-trust-dot{width:16px;height:16px;border-radius:50%;border:2px solid #fff}
+.gate-card h2{font-size:18px;font-weight:800;color:#30312F;margin:0 0 12px;line-height:1.3}
+.gate-card .gate-body{display:none}
+.gate-bullets{list-style:none;margin:0 0 16px;padding:0}
+.gate-bullet{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#374151;margin-bottom:8px;line-height:1.5}
+.gate-bullet-check{width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#072A6C,#48C39E);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.gate-social{display:flex;align-items:center;gap:6px;font-size:11px;color:#9CA3AF;margin:10px 0 0}
+.gate-social-dots{display:flex;gap:2px}
+.gate-social-dot{width:18px;height:18px;border-radius:50%;background:#E5E7EB;border:2px solid #fff;margin-left:-6px}
+.gate-social-dot:first-child{margin-left:0}
+@media(max-width:560px){.gate-layout{flex-direction:column}.gate-preview{width:100%;max-width:240px;margin:0 auto}}
+.email-inp{width:100%;padding:11px 14px;font-size:13px;border:1.5px solid #E5E7EB;border-radius:8px;outline:none;margin-bottom:12px;transition:border-color .2s;font-family:inherit}
+.email-inp:focus{border-color:#072A6C}
+.email-inp.err{border-color:#E04355}
+.email-err{font-size:12px;color:#E04355;text-align:left;margin:-8px 0 10px;display:none}
+.submit-btn{width:100%;padding:12px;font-size:13px;font-weight:700;background:linear-gradient(135deg,#072A6C,#2365FF);color:#fff;border:none;border-radius:8px;cursor:pointer;letter-spacing:.3px;transition:opacity .2s}
+.submit-btn:disabled{opacity:.7;cursor:wait}
+.gate-note{font-size:11px;color:#9CA3AF;margin:10px 0 0}
+
+/* Preview breakdown */
+.card{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sec-title{font-size:10px;font-weight:700;color:#072A6C;text-transform:uppercase;letter-spacing:.8px;margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* Breakdown rows */
+.br-row{margin-bottom:12px}
+.br-top{display:flex;justify-content:space-between;margin-bottom:4px;align-items:baseline}
+.br-name{font-size:12px;color:#30312F;font-weight:500}
+.br-right{display:flex;align-items:baseline;gap:5px}
+.br-amt{font-size:12px;font-weight:700}
+.br-pct{font-size:10px;color:#9CA3AF}
+.br-track{height:5px;background:#F0F1F3;border-radius:3px;overflow:hidden}
+.br-fill{height:5px;border-radius:3px;transition:width .5s ease}
+.br-total{border-top:2px solid #072A6C;margin-top:14px;padding-top:12px;display:flex;justify-content:space-between;align-items:baseline}
+.br-total-lbl{font-size:13px;font-weight:700;color:#30312F}
+.br-total-val{font-size:16px;font-weight:800;color:#E04355}
+
+/* Unlock banner */
+.unlock-banner{background:linear-gradient(135deg,#072A6C,#48C39E);border-radius:12px;padding:14px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.ub-left{display:flex;align-items:center;gap:10px}
+.ub-title{font-size:13px;font-weight:700}
+.ub-sub{font-size:11px;opacity:.85}
+.pdf-btn{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.45);border-radius:7px;padding:8px 16px;color:#fff;font-size:12px;font-weight:700;white-space:nowrap;transition:background .2s}
+.pdf-btn:hover{background:rgba(255,255,255,.3)}
+
+/* Methodology & Sources */
+.method-item{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #F0F1F3}
+.method-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.method-title{font-size:12px;font-weight:700;color:#072A6C;margin-bottom:4px}
+.method-formula{display:block;background:#F0F4F8;padding:5px 9px;border-radius:5px;font-size:10px;font-family:'SF Mono','Fira Code',monospace;margin-bottom:3px;color:#072A6C}
+.method-detail{font-size:10px;color:#9CA3AF}
+.src-item{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #F0F1F3}
+.src-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.src-name{font-size:12px;font-weight:700;color:#30312F;margin-bottom:2px}
+.src-desc{font-size:11px;color:#6B7280;margin-bottom:3px}
+.src-url{font-size:10px;color:#48C39E;text-decoration:none}
+.cta-box{background:#EEF6F5;border-radius:8px;padding:14px;margin-top:12px}
+.cta-box-title{font-size:11px;font-weight:600;color:#48C39E;margin-bottom:3px}
+.cta-box-text{font-size:11px;color:#30312F;line-height:1.6;margin-bottom:9px}
+.cta-link{display:inline-block;background:linear-gradient(135deg,#072A6C,#2365FF);color:#fff;padding:8px 16px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none}
+.footer-note{font-size:10px;color:#9CA3AF;line-height:1.6;margin-top:36px;padding-top:20px;border-top:1px solid #E5E7EB}
+
+
+/* ── How We Calculated This ─────────────────────────────────────── */
+.calc-reveal{background:#fff;border:1px solid #E5E7EB;border-radius:12px;margin-bottom:22px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.calc-toggle{width:100%;display:flex;align-items:center;gap:10px;padding:14px 18px;background:none;border:none;cursor:pointer;text-align:left;font-family:inherit}
+.calc-toggle-label{font-size:13px;font-weight:700;color:#30312F;flex:1}
+.calc-toggle-sub{font-size:11px;color:#9CA3AF;font-weight:400;margin-left:6px}
+.calc-chevron{transition:transform .2s;flex-shrink:0;color:#9CA3AF}
+.calc-reveal.open .calc-chevron{transform:rotate(180deg)}
+.calc-body{display:none;border-top:1px solid #F0F1F3}
+.calc-reveal.open .calc-body{display:block}
+.calc-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 18px;border-bottom:1px solid #F9FBF9}
+.calc-row:last-of-type{border-bottom:none}
+.calc-cat{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#374151;min-width:170px;flex-shrink:0}
+.calc-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.calc-math{font-size:11px;color:#6B7280;text-align:right;font-family:'SF Mono','Fira Code',Menlo,monospace;line-height:1.5}
+.calc-math em{font-style:normal;color:#9CA3AF;font-size:10px;display:block;margin-top:1px}
+.calc-total{display:flex;justify-content:space-between;align-items:baseline;padding:11px 18px;background:#F9FBF9;border-top:2px solid #072A6C;font-size:13px;font-weight:800;color:#30312F}
+.calc-total-amt{color:#E04355;font-size:15px}
+/* ══ PRINT ══════════════════════════════════════ */
+.print-only{display:none}
+@media print{
+  .screen-only{display:none!important}
+  .print-only{display:block!important}
+  body{background:#fff;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{margin:.45in .45in .45in .45in;size:letter}
+  .pr{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#30312F;font-size:11px}
+  .pr-hdr{background:#072A6C!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#fff;padding:16px 20px 14px;border-radius:8px;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
+  .pr-hdr-title{font-size:21px;font-weight:900;margin:0 0 2px}
+  .pr-hdr-sub{font-size:10px;opacity:.75;margin:0 0 5px}
+  .pr-hdr-brand{font-size:11px;font-weight:700;color:#48C39E;letter-spacing:1px}
+  .pr-hdr-total{font-size:34px;font-weight:900;text-align:right;line-height:1}
+  .pr-hdr-total-label{font-size:9px;opacity:.7;text-align:right;margin-top:3px}
+  .pr-kpis{display:flex;border:1px solid #E5E7EB;border-radius:6px;overflow:hidden;margin:14px 0 10px}
+  .pr-kpi{flex:1;padding:8px 12px;border-right:1px solid #E5E7EB}
+  .pr-kpi:last-child{border-right:none}
+  .pr-kpi-lbl{font-size:8px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+  .pr-kpi-val{font-size:16px;font-weight:800}
+  .pr-kpi-sub{font-size:9px;color:#6B7280;margin-top:1px}
+  .pr-body{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+  .pr-sec{font-size:9px;font-weight:700;color:#072A6C;text-transform:uppercase;letter-spacing:.8px;border-bottom:2px solid #072A6C;padding-bottom:3px;margin:0 0 7px}
+  .pr-tbl{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:10px}
+  .pr-tbl td{padding:2.5px 0}
+  .pr-tbl td:last-child{text-align:right;font-weight:700}
+  .pr-crow{margin-bottom:7px}
+  .pr-ctop{display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px}
+  .pr-clbl{font-weight:500}
+  .pr-camt{font-weight:700}
+  .pr-cbg{height:4px;background:#E5E7EB;border-radius:2px}
+  .pr-cfg{height:4px;border-radius:2px}
+  .pr-cpct{font-size:8px;color:#6B7280;text-align:right}
+  .pr-total-row{display:flex;justify-content:space-between;border-top:2px solid #072A6C;padding-top:7px;margin-top:3px;font-size:12px;font-weight:800}
+  .pr-total-amt{color:#E04355}
+  .pr-mitem{margin-bottom:5px;font-size:9px}
+  .pr-mtitle{font-weight:700;color:#072A6C}
+  .pr-mfml{font-family:'Courier New',monospace;background:#F0F4F8;padding:1px 5px;border-radius:3px;font-size:8px;display:inline-block}
+  .pr-src{font-size:8.5px;color:#6B7280;margin-bottom:2.5px}
+  .pr-src strong{color:#30312F}
+  .pr-footer{font-size:8px;color:#6B7280;margin-top:14px;border-top:1px solid #E5E7EB;padding-top:7px;display:flex;justify-content:space-between}
+  .pr-di{display:flex;align-items:center;gap:5px;font-size:9px;margin-bottom:4px}
+  .pr-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+}
+
+/* ── PEER BENCHMARKS ────────────────────────────── */
+.bench-preview-card{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:20px 24px;margin-bottom:16px}
+.bench-preview-hdr{font-size:13px;font-weight:700;color:#072A6C;margin-bottom:12px}
+.bench-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.bench-tbl th{font-size:11px;font-weight:600;color:#6B7280;padding:6px 8px;border-bottom:2px solid #E5E7EB;text-align:left}
+.bench-tbl td{padding:9px 8px;border-bottom:1px solid #F3F4F6;color:#374151}
+.bench-you{font-weight:700;color:#E04355!important}
+.bench-peer-val{font-weight:600;color:#6B7280!important}
+.bench-best-val{font-weight:700;color:#48C39E!important}
+.bench-peer-col,.bench-best-col{font-size:10px;font-weight:600;letter-spacing:.3px}
+.bench-peer-col{color:#6B7280}
+.bench-best-col{color:#48C39E}
+/* Unlocked benchmark rows */
+.bench-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid #F3F4F6}
+.bench-row:last-child{border-bottom:none}
+.bench-metric{flex:0 0 155px;font-size:12px;color:#374151;font-weight:600;padding-top:2px}
+.bench-row-note{font-size:10px;color:#9CA3AF;margin-top:3px;font-weight:400;line-height:1.4}
+.bench-bar-wrap{flex:1;display:flex;flex-direction:column;gap:5px}
+.bench-bar-row{display:flex;align-items:center;gap:6px}
+.bench-bar-track{flex:1;height:6px;background:#F3F4F6;border-radius:99px;overflow:hidden}
+.bench-bar-fill{height:100%;border-radius:99px;transition:width .4s ease}
+.bench-bar-lbl{min-width:52px;text-align:right;font-weight:700;font-size:11px}
+.bench-bar-tag{min-width:82px;font-size:10px;color:#9CA3AF}
+.bench-delta{min-width:88px;text-align:right;font-size:11px;font-weight:700;padding-top:2px}
+.bench-delta.worse{color:#E04355}
+.bench-delta.better{color:#48C39E}
+.bench-delta.neutral{color:#6B7280}
+
+/* ── Polish: slider hover, number formatting ────── */
+input[type=range]:hover{opacity:.85}
+input[type=range]:focus{outline:2px solid rgba(7,42,108,.25);outline-offset:2px;border-radius:3px}
+.icm-btn:hover:not(.sel){background:#F9FAFB;border-color:#D1D5DB}
+.submit-btn:hover:not(:disabled){opacity:.88}
+input[type=number]:focus{background:#FAFBFC}
+
+
+/* ── Floating gate bar ───────────────────────────────────────────────────── */
+.bench-left{transition:filter .4s,opacity .4s}
+.bench-left.blurred{filter:blur(5px) saturate(.4);opacity:.5;pointer-events:none;user-select:none}
+
+/* Floating bar container — sticky to bottom of results column */
+.float-gate{position:sticky;bottom:20px;z-index:20;margin-top:20px;pointer-events:none}
+.float-gate.hidden{display:none}
+.float-bar{background:#fff;border:1px solid #E5E7EB;border-radius:14px;box-shadow:0 8px 32px rgba(7,42,108,.18),0 2px 8px rgba(0,0,0,.06);padding:14px 18px;display:flex;align-items:center;gap:14px;pointer-events:all;animation:floatIn .3s ease}
+@keyframes floatIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.float-bar-left{flex-shrink:0}
+.float-bar-label{font-size:11px;font-weight:700;color:#072A6C;margin-bottom:1px}
+.float-bar-sub{font-size:10px;color:#9CA3AF}
+.float-bar-mid{flex:1;min-width:0}
+.float-bar-mid .email-inp{margin-bottom:0;background:#F9FBF9}
+.float-bar-right{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.float-bar-right .submit-btn{white-space:nowrap;padding:10px 18px;font-size:12px;width:auto}
+.float-trust{font-size:9px;color:#9CA3AF;white-space:nowrap}
+
+/* Unlocked floating bar */
+.float-bar-unlocked{background:linear-gradient(135deg,#072A6C,#2365FF);border-color:transparent}
+.float-bar-unlocked .float-bar-label{color:#fff}
+.float-bar-unlocked .float-bar-sub{color:rgba(255,255,255,.65)}
+.float-pdf-btn{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.45);border-radius:8px;padding:9px 16px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s}
+.float-pdf-btn:hover{background:rgba(255,255,255,.3)}
+
+@media(max-width:680px){
+  .float-bar{flex-wrap:wrap;gap:10px}
+  .float-bar-mid,.float-bar-right{width:100%}
+  .float-bar-right .submit-btn{width:100%}
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════ SCREEN APP ═══════════════════════════════════════════ -->
+<div class="screen-only">
+
+<!-- Hero -->
+<div class="hero">
+    <div class="hero-inner">
+    <div class="logo">
+      <img src="https://cdn.prod.website-files.com/5f2fd61608fd62471b38ff8a/6482f3d37d218006cd1a2a6c_everstage-navbar-logo.svg" alt="Everstage" height="26" style="display:block;filter:brightness(0) invert(1);opacity:.95">
+    </div>
+    <h1>Comp Plan Error Impact Calculator</h1>
+    <p>See exactly how much your spreadsheet-based commission process is costing your sales org — errors, admin overhead, and comp-driven attrition.</p>
+
+  <!-- Trust strip — inside hero-inner so it aligns with content -->
+  <div class="trust-strip">
+    <div class="trust-inner">
+      <div class="trust-item">
+        <div class="trust-dot">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="#48C39E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        Built from data across 500+ sales orgs
+      </div>
+      <div class="trust-item">
+        <div class="trust-dot">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="#48C39E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        Benchmarks from Gartner, HBR &amp; Salesforce
+      </div>
+      <div class="trust-item">
+        <div class="trust-dot">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="#48C39E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        Used by 1,200+ RevOps &amp; Sales Finance leaders
+      </div>
+    </div>
+  </div>
+  </div><!-- /hero-inner -->
+</div>
+
+<!-- App layout: sidebar + results -->
+<div class="app">
+
+  <!-- ═══ SIDEBAR ════════════════════════════════════════════════ -->
+  <aside class="sidebar">
+
+    <!-- Your Organization -->
+    <div class="sb-section">
+      <div class="sb-title">Your Organization</div>
+
+      <div class="f">
+        <label>Sales team size</label>
+        <div class="f-row"><input type="number" id="f-teamSize" value="40" min="1"><span class="fa r">reps</span></div>
+      </div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">Average OTE</span><span class="sf-val" id="d-avgOTE">$120,000</span></div>
+        <input type="range" class="compact" id="f-avgOTE" min="50000" max="500000" step="5000" value="120000">
+        <div class="sf-range"><span>$50K</span><span>$500K</span></div>
+      </div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">Base / Variable Split</span><span class="sf-val" id="d-basePct">50 / 50</span></div>
+        <input type="range" class="compact" id="f-basePct" min="30" max="70" step="5" value="50">
+        <div class="sf-range"><span>30/70</span><span>70/30</span></div>
+      </div>
+
+      <div class="f">
+        <label>Annual revenue <span id="d-revenue" style="font-size:10px;font-weight:400;color:#9CA3AF;margin-left:4px">($25,000,000)</span></label>
+        <div class="f-row"><span class="fa">$</span><input type="number" id="f-revenue" value="25000000" min="0" step="1000000"></div>
+      </div>
+
+      <div class="derived">
+        <div class="dc"><div class="dc-lbl">Variable / rep</div><div class="dc-val" id="d-varPay">$60K</div></div>
+        <div class="dc"><div class="dc-lbl">Total var. budget</div><div class="dc-val" id="d-totalVar">$2.4M</div></div>
+        <div class="dc"><div class="dc-lbl">Revenue / rep</div><div class="dc-val" id="d-revRep">$625K</div></div>
+        <div class="dc"><div class="dc-lbl">Comp-to-rev ratio</div><div class="dc-val" id="d-compRatio">19.2%</div></div>
+      </div>
+    </div>
+
+    <!-- ICM Tool: locked to Spreadsheets -->
+    <div class="sb-divider"></div>
+    <div class="sb-section">
+      <div class="sb-title">Current ICM Tool</div>
+      <div style="background:#EEF4ED;border:1.5px solid #072A6C;border-radius:8px;padding:10px 14px;">
+        <div style="font-size:12px;font-weight:700;color:#072A6C">Spreadsheets</div>
+        <div style="font-size:11px;color:#6B7280;margin-top:2px">Manual, formula-heavy, high error risk</div>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <!-- Assumptions: Error & Admin -->
+    <div class="sb-section">
+      <div class="sb-title">Error &amp; Admin</div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">Commission error rate</span><span class="sf-val" id="d-errorRate">8.0%</span></div>
+        <input type="range" class="compact" id="f-errorRate" min="0" max="15" step="0.5" value="8">
+        <div class="sf-range"><span>0%</span><span>15%</span></div>
+        <div class="bench-note">Gartner (2024): avg. error rate is 3&ndash;8% for spreadsheet/manual processes, &lt;2% with modern ICM</div>
+      </div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">Admin time / month</span><span class="sf-val" id="d-adminHours">120 hrs</span></div>
+        <input type="range" class="compact" id="f-adminHours" min="0" max="200" step="5" value="120">
+        <div class="sf-range"><span>0 hrs</span><span>200 hrs</span></div>
+        <div class="bench-note">Alexander Group: comp admin runs 60&ndash;120 hrs/month in manually-managed orgs</div>
+      </div>
+
+      <div class="f">
+        <label>Admin hourly rate</label>
+        <div class="f-row"><span class="fa">$</span><input type="number" id="f-adminRate" value="50" min="0"><span class="fa r">/hr</span></div>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <!-- Assumptions: Attrition -->
+    <div class="sb-section">
+      <div class="sb-title">Attrition &amp; Ramp</div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">Annual turnover rate</span><span class="sf-val" id="d-turnover">35.0%</span></div>
+        <input type="range" class="compact" id="f-turnover" min="5" max="60" step="1" value="35">
+        <div class="sf-range"><span>5%</span><span>60%</span></div>
+        <div class="bench-note">Salesforce State of Sales: avg. sales rep turnover is 25&ndash;35% annually</div>
+      </div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">% driven by comp issues</span><span class="sf-val" id="d-compDriven">31.0%</span></div>
+        <input type="range" class="compact" id="f-compDriven" min="5" max="60" step="1" value="31">
+        <div class="sf-range"><span>5%</span><span>60%</span></div>
+        <div class="bench-note">Alexander Group: 25&ndash;31% of sales attrition is directly comp-related</div>
+      </div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">Replacement cost multiplier</span><span class="sf-val" id="d-replMult">1.5x base</span></div>
+        <input type="range" class="compact" id="f-replMult" min="10" max="30" step="1" value="15">
+        <div class="sf-range"><span>1.0x</span><span>3.0x</span></div>
+      </div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">New hire ramp time</span><span class="sf-val" id="d-ramp">5 months</span></div>
+        <input type="range" class="compact" id="f-ramp" min="1" max="12" step="1" value="5">
+        <div class="sf-range"><span>1 mo</span><span>12 mo</span></div>
+        <div class="bench-note">Sales Benchmark Index: avg. ramp to full quota attainment is 3&ndash;9 months</div>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <!-- Assumptions: Revenue & Legal -->
+    <div class="sb-section">
+      <div class="sb-title">Revenue &amp; Legal</div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">Gaming / sandbagging loss</span><span class="sf-val" id="d-gaming">5.0%</span></div>
+        <input type="range" class="compact" id="f-gaming" min="1" max="10" step="0.5" value="5">
+        <div class="sf-range"><span>1%</span><span>10%</span></div>
+        <div class="bench-note">HBR: deal-timing &amp; sandbagging behaviors cost 4&ndash;6% of annual revenue</div>
+      </div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">Probability of legal issues</span><span class="sf-val" id="d-legal">25.0%</span></div>
+        <input type="range" class="compact" id="f-legal" min="5" max="40" step="1" value="25">
+        <div class="sf-range"><span>5%</span><span>40%</span></div>
+        <div class="bench-note">Comp disputes that escalate to legal avg. $150K+ in settlement &amp; resolution costs</div>
+      </div>
+
+      <div class="sf">
+        <div class="sf-top"><span class="sf-label">Avg legal cost if issue arises</span><span class="sf-val" id="d-legalCost">$150,000</span></div>
+        <input type="range" class="compact" id="f-legalCost" min="25000" max="500000" step="25000" value="150000">
+        <div class="sf-range"><span>$25K</span><span>$500K</span></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ═══ RESULTS PANEL ══════════════════════════════════════════ -->
+  <main class="results">
+
+    <!-- Headline Stats -->
+    <div class="panel-label">Estimated annual cost</div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="sc-lbl">Total Annual Impact</div><div class="sc-val" id="s-total" style="color:#E04355">$2.4M</div><div class="sc-sub" id="s-total-sub">9.7% of revenue</div></div>
+      <div class="stat-card"><div class="sc-lbl">Comp-Driven Departures</div><div class="sc-val" id="s-dep" style="color:#072A6C">4 reps/yr</div><div class="sc-sub" id="s-dep-sub">14 total turnover</div></div>
+      <div class="stat-card"><div class="sc-lbl">Cost Per Departure</div><div class="sc-val" id="s-cpd" style="color:#48C39E">$90K</div><div class="sc-sub" id="s-cpd-sub">1.5x base salary</div></div>
+    </div>
+
+
+    <!-- How we calculated this -->
+    <div class="calc-reveal" id="calc-reveal">
+      <button class="calc-toggle" onclick="document.getElementById('calc-reveal').classList.toggle('open')">
+        <svg class="calc-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="calc-toggle-label">How we calculated this<span class="calc-toggle-sub">— see the exact math behind each number</span></span>
+      </button>
+      <div class="calc-body">
+        <div class="calc-row">
+          <div class="calc-cat"><div class="calc-dot" style="background:#E04355"></div>Calculation Errors</div>
+          <div class="calc-math" id="math-calcerrs">—<em>variable budget &times; error rate</em></div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-cat"><div class="calc-dot" style="background:#E04355"></div>Admin Overhead</div>
+          <div class="calc-math" id="math-admin">—<em>hrs/mo &times; rate &times; 12 months</em></div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-cat"><div class="calc-dot" style="background:#072A6C"></div>Turnover Replacement</div>
+          <div class="calc-math" id="math-turnover">—<em>comp departures &times; replacement cost/rep</em></div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-cat"><div class="calc-dot" style="background:#072A6C"></div>Ramp Productivity Loss</div>
+          <div class="calc-math" id="math-ramp">—<em>departures &times; rev/rep/mo &times; ramp months &times; 50%</em></div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-cat"><div class="calc-dot" style="background:#48C39E"></div>Revenue Leakage</div>
+          <div class="calc-math" id="math-gaming">—<em>annual revenue &times; gaming loss %</em></div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-cat"><div class="calc-dot" style="background:#48C39E"></div>Legal &amp; Dispute Risk</div>
+          <div class="calc-math" id="math-legal">—<em>probability &times; avg resolution cost</em></div>
+        </div>
+        <div class="calc-total">
+          <span>Total Annual Impact</span>
+          <span class="calc-total-amt" id="math-total">—</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Always-visible: Full cost breakdown -->
+    <div id="open-breakdown">
+      <div class="panel-label">Full cost breakdown</div>
+      <div class="grid2" style="margin-bottom:16px">
+        <div class="card"><div class="sec-title">Estimated Annual Costs</div><div id="rep-breakdown"></div><div class="br-total"><span class="br-total-lbl">Total Annual Impact</span><span class="br-total-val" id="rep-total">$2,432,333</span></div></div>
+        <div class="card"><div class="sec-title">Cost Distribution</div><div id="rep-donut" style="display:flex;justify-content:center;padding:10px 0"></div><div id="rep-legend" style="margin-top:6px"></div></div>
+      </div>
+      <div class="card" style="margin-bottom:22px">
+          <div class="sec-title">Sources &amp; References</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">
+            <div class="src-item"><div class="src-name">Gartner</div><div class="src-desc">Commission error rates (3-8% manual, &lt;2% modern ICM)</div><a class="src-url" href="https://gartner.com/en/sales/topics/sales-compensation" target="_blank">gartner.com/en/sales/topics/sales-compensation</a></div>
+            <div class="src-item"><div class="src-name">Harvard Business Review</div><div class="src-desc">Sandbagging &amp; gaming behavior (4-6% revenue loss)</div><a class="src-url" href="https://hbr.org/topic/subject/sales-compensation" target="_blank">hbr.org/topic/subject/sales-compensation</a></div>
+            <div class="src-item"><div class="src-name">Salesforce State of Sales</div><div class="src-desc">Turnover &amp; attrition benchmarks across sales orgs</div><a class="src-url" href="https://salesforce.com/resources/research-reports/state-of-sales" target="_blank">salesforce.com/resources/research-reports/state-of-sales</a></div>
+            <div class="src-item"><div class="src-name">Alexander Group</div><div class="src-desc">Sales compensation design &amp; admin cost benchmarks</div><a class="src-url" href="https://alexandergroup.com/insights/sales-compensation" target="_blank">alexandergroup.com/insights/sales-compensation</a></div>
+            <div class="src-item"><div class="src-name">Incentive Research Foundation</div><div class="src-desc">Comp plan design &amp; effectiveness research</div><a class="src-url" href="https://theirf.org/research" target="_blank">theirf.org/research</a></div>
+          </div>
+          <div class="cta-box"><div class="cta-box-title">Want to reduce these costs?</div><div class="cta-box-text">Everstage customers typically reduce comp errors by 85%+ and cut admin time in half within 90 days.</div><a class="cta-link" href="https://www.everstage.com/book-a-demo?ref=commission-error-calculator" target="_blank">See Everstage in action &rarr;</a></div>
+      </div>
+    </div>
+    <div class="footer-note">All figures are estimates — adjust the inputs on the left to reflect your organization. Sources: Gartner, HBR, Salesforce, Alexander Group, Incentive Research Foundation, Sales Benchmark Index.</div>
+
+    <!-- Gate section — peer benchmarks -->
+    <div id="gate-section">
+      <div class="panel-label">See how you stack up against peers</div>
+      <div class="gate-wrap">
+        <div class="blurred">
+          <div class="bench-preview-card">
+            <div class="bench-preview-hdr">Peer Benchmark Comparison &mdash; <em>similar company size &amp; ICM tool</em></div>
+            <table class="bench-tbl">
+              <thead><tr><th>Metric</th><th>Your Org</th><th class="bench-peer-col">Peer Avg</th><th class="bench-best-col">Best-in-Class</th></tr></thead>
+              <tbody>
+                <tr><td>Commission Error Rate</td><td class="bench-you">8.0%</td><td class="bench-peer-val">7.2%</td><td class="bench-best-val">1.5%</td></tr>
+                <tr><td>Admin Time / Month</td><td class="bench-you">120 hrs</td><td class="bench-peer-val">115 hrs</td><td class="bench-best-val">22 hrs</td></tr>
+                <tr><td>Comp-Driven Attrition</td><td class="bench-you">31%</td><td class="bench-peer-val">30%</td><td class="bench-best-val">12%</td></tr>
+                <tr><td>Total Cost as % of Revenue</td><td class="bench-you">9.7%</td><td class="bench-peer-val">10%</td><td class="bench-best-val">3%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="gate-overlay"></div>
+        <div class="gate-card-wrap">
+          <div class="gate-card">
+            <div class="gate-layout">
+              <div class="gate-preview-wrap">
+              <div class="gate-preview">
+                <svg width="170" height="221" viewBox="0 0 148 192" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="148" height="192" fill="white"/>
+                  <rect width="148" height="36" fill="#072A6C"/>
+                  <rect x="8" y="7" width="30" height="3" rx="1" fill="#48C39E" opacity="0.9"/>
+                  <rect x="8" y="14" width="56" height="9" rx="2" fill="white" opacity="0.92"/>
+                  <rect x="8" y="26" width="40" height="2.5" rx="1" fill="white" opacity="0.35"/>
+                  <rect x="100" y="9" width="38" height="2.5" rx="1" fill="white" opacity="0.35"/>
+                  <rect x="100" y="15" width="28" height="7" rx="1.5" fill="white" opacity="0.75"/>
+                  <rect x="6" y="41" width="136" height="2.5" rx="1" fill="#072A6C" opacity="0.6"/>
+                  <rect x="6" y="49" width="50" height="2" rx="1" fill="#EAECEF"/><rect x="62" y="49" width="22" height="2" rx="1" fill="#E04355" opacity="0.7"/><rect x="90" y="49" width="22" height="2" rx="1" fill="#6B7280" opacity="0.5"/><rect x="118" y="49" width="20" height="2" rx="1" fill="#48C39E" opacity="0.8"/>
+                  <rect x="6" y="55" width="46" height="2" rx="1" fill="#EAECEF"/><rect x="62" y="55" width="22" height="2" rx="1" fill="#E04355" opacity="0.7"/><rect x="90" y="55" width="22" height="2" rx="1" fill="#6B7280" opacity="0.5"/><rect x="118" y="55" width="20" height="2" rx="1" fill="#48C39E" opacity="0.8"/>
+                  <rect x="6" y="61" width="52" height="2" rx="1" fill="#EAECEF"/><rect x="62" y="61" width="22" height="2" rx="1" fill="#E04355" opacity="0.6"/><rect x="90" y="61" width="22" height="2" rx="1" fill="#6B7280" opacity="0.5"/><rect x="118" y="61" width="20" height="2" rx="1" fill="#48C39E" opacity="0.8"/>
+                  <rect x="6" y="67" width="56" height="2" rx="1" fill="#EAECEF"/><rect x="62" y="67" width="22" height="2" rx="1" fill="#072A6C" opacity="0.5"/><rect x="90" y="67" width="22" height="2" rx="1" fill="#6B7280" opacity="0.5"/><rect x="118" y="67" width="20" height="2" rx="1" fill="#48C39E" opacity="0.8"/>
+                  <rect x="6" y="78" width="136" height="16" rx="3" fill="#F8F6FF"/><rect x="12" y="82" width="60" height="8" rx="2" fill="#E04355" opacity="0.7"/><rect x="84" y="83" width="50" height="6" rx="2" fill="#48C39E" opacity="0.5"/>
+                  <rect x="6" y="101" width="136" height="2.5" rx="1" fill="#072A6C" opacity="0.6"/>
+                  <rect x="6" y="106" width="60" height="35" rx="2" fill="#F9FBF9" stroke="#E5E7EB" stroke-width="0.75"/><rect x="72" y="106" width="70" height="35" rx="2" fill="#F9FBF9" stroke="#E5E7EB" stroke-width="0.75"/>
+                  <rect x="12" y="112" width="30" height="5" rx="1" fill="#E04355" opacity="0.7"/><rect x="12" y="121" width="44" height="2" rx="1" fill="#EAECEF"/><rect x="12" y="126" width="38" height="2" rx="1" fill="#EAECEF"/>
+                  <rect x="78" y="112" width="30" height="5" rx="1" fill="#48C39E" opacity="0.7"/><rect x="78" y="121" width="52" height="2" rx="1" fill="#EAECEF"/><rect x="78" y="126" width="44" height="2" rx="1" fill="#EAECEF"/>
+                  <rect x="0" y="182" width="148" height="10" fill="#F9FBF9"/><rect x="6" y="185.5" width="44" height="2" rx="1" fill="#D1D5DB"/><rect x="110" y="185.5" width="32" height="2" rx="1" fill="#D1D5DB"/>
+                </svg>
+              </div>
+
+              </div><!-- /gate-preview-wrap -->
+              <div class="gate-content">
+                <div class="gate-logo">
+                  <img src="https://cdn.prod.website-files.com/5f2fd61608fd62471b38ff8a/6482f3d37d218006cd1a2a6c_everstage-navbar-logo.svg" alt="Everstage" height="22" style="display:block;opacity:.9">
+                </div>
+                <h2>Get peer benchmarks + your shareable PDF</h2>
+                <ul class="gate-bullets">
+                  <li class="gate-bullet"><div class="gate-bullet-check"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span>See where your error rate, admin time &amp; attrition rank vs. similar orgs</span></li>
+                  <li class="gate-bullet"><div class="gate-bullet-check"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span>Compare against best-in-class benchmarks from 500+ RevOps leaders</span></li>
+                  <li class="gate-bullet"><div class="gate-bullet-check"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span>Full PDF report your CFO can audit &mdash; shareable in one click</span></li>
+                </ul>
+                <form id="email-form">
+                  <div class="gate-form-row">
+                    <input type="email" class="email-inp" id="email-inp" placeholder="your.name@company.com">
+                    <button type="submit" class="submit-btn" id="submit-btn">Unlock &amp; Get PDF &rarr;</button>
+                  </div>
+                  <div class="email-err" id="email-err"></div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unlocked: peer benchmarks + PDF download -->
+    <div id="report-section" style="display:none">
+      <div class="unlock-banner">
+        <div class="ub-left">
+          <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="rgba(255,255,255,0.2)"/><path d="M6 11l3.5 3.5L16 7" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><div class="ub-title">Benchmarks unlocked</div><div class="ub-sub">See how you compare &mdash; adjust inputs to explore scenarios</div></div>
+        </div>
+        <button class="pdf-btn" onclick="window.print()">
+          <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M1 5h13v6H1V5zM3 11v3h9v-3" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          Download PDF Report
+        </button>
+      </div>
+      <div class="panel-label">Your peer benchmark comparison</div>
+      <div class="card" style="margin-bottom:22px"><div id="bench-card"></div></div>
+    </div>
+
+    <!-- Floating gate bar — scrolls to main form, hides when gate visible -->
+    <div class="float-gate" id="float-gate">
+      <div id="float-locked">
+        <div class="float-bar">
+          <div class="float-bar-left">
+            <div class="float-bar-label">🔒 Unlock peer benchmarks + PDF</div>
+            <div class="float-bar-sub">Best-in-class data from 500+ sales orgs</div>
+          </div>
+          <div style="flex:1"></div>
+          <button class="submit-btn float-cta-btn" onclick="document.getElementById('gate-section').scrollIntoView({behavior:'smooth',block:'center'})">See how you compare &rarr;</button>
+        </div>
+      </div>
+      <div id="float-unlocked" style="display:none">
+        <div class="float-bar float-bar-unlocked">
+          <div class="float-bar-left">
+            <div class="float-bar-label">✓ Benchmarks unlocked</div>
+            <div class="float-bar-sub">Your personalised PDF is ready</div>
+          </div>
+          <div style="flex:1"></div>
+          <button class="float-pdf-btn" onclick="window.print()">
+            <svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M1 5h13v6H1V5zM3 11v3h9v-3" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            Download PDF Report
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+  </main>
+
+</div><!-- /app -->
+</div><!-- /screen-only -->
+
+
+<!-- ═══════ PRINT REPORT ══════════════════════════════════════════ -->
+<div class="print-only pr" id="print-report">
+  <div class="pr-hdr">
+    <div><div class="pr-hdr-title">Comp Plan Error Impact Report</div><div class="pr-hdr-sub">Personalized cost analysis based on your organization's inputs</div><div class="pr-hdr-brand">EVERSTAGE</div></div>
+    <div><div class="pr-hdr-total" id="pr-total">$2.4M</div><div class="pr-hdr-total-label" id="pr-total-sub">TOTAL ANNUAL IMPACT</div></div>
+  </div>
+  <div class="pr-kpis">
+    <div class="pr-kpi"><div class="pr-kpi-lbl">Comp-Driven Departures</div><div class="pr-kpi-val" id="pr-dep" style="color:#072A6C">4 reps/yr</div><div class="pr-kpi-sub" id="pr-dep-sub">14 total turnover</div></div>
+    <div class="pr-kpi"><div class="pr-kpi-lbl">Cost Per Departure</div><div class="pr-kpi-val" id="pr-cpd" style="color:#E04355">$90K</div><div class="pr-kpi-sub" id="pr-cpd-sub">1.5x base salary</div></div>
+    <div class="pr-kpi"><div class="pr-kpi-lbl">Current Tool</div><div class="pr-kpi-val" id="pr-tool" style="color:#E04355;font-size:12px;padding-top:3px">Spreadsheets</div><div class="pr-kpi-sub" id="pr-err-rate">Error rate: 8.0%</div></div>
+  </div>
+  <div class="pr-body">
+    <div>
+      <div class="pr-sec">Your Inputs</div><table class="pr-tbl" id="pr-inp-tbl"></table>
+      <div class="pr-sec">Assumptions</div><table class="pr-tbl" id="pr-assm-tbl"></table>
+      <div class="pr-sec">Calculation Methodology</div>
+      <div class="pr-mitem"><span class="pr-mtitle">&#9679; Calculation Errors: </span><span class="pr-mfml">Variable Budget &times; Error Rate</span></div>
+      <div class="pr-mitem"><span class="pr-mtitle">&#9679; Admin Overhead: </span><span class="pr-mfml">Admin Hrs &times; Rate &times; 12</span></div>
+      <div class="pr-mitem"><span class="pr-mtitle">&#9679; Turnover Replacement: </span><span class="pr-mfml">Comp Departures &times; (Base &times; Multiplier)</span></div>
+      <div class="pr-mitem"><span class="pr-mtitle">&#9679; Ramp Productivity Loss: </span><span class="pr-mfml">Departures &times; Rev/Rep/Mo &times; Ramp &times; 50%</span></div>
+      <div class="pr-mitem"><span class="pr-mtitle">&#9679; Revenue Leakage: </span><span class="pr-mfml">Annual Revenue &times; Gaming Loss %</span></div>
+      <div class="pr-mitem"><span class="pr-mtitle">&#9679; Legal &amp; Dispute Risk: </span><span class="pr-mfml">Legal Probability &times; Avg Legal Cost</span></div>
+      <div style="margin-top:10px">
+        <div class="pr-sec">Sources &amp; References</div>
+        <div class="pr-src"><strong>Gartner</strong> &mdash; Commission error rates (3-8% manual, &lt;2% modern ICM)<br><span style="color:#48C39E">gartner.com/en/sales/topics/sales-compensation</span></div>
+        <div class="pr-src"><strong>Harvard Business Review</strong> &mdash; Sandbagging &amp; gaming behavior (4-6%)<br><span style="color:#48C39E">hbr.org/topic/subject/sales-compensation</span></div>
+        <div class="pr-src"><strong>Salesforce State of Sales</strong> &mdash; Turnover &amp; attrition benchmarks<br><span style="color:#48C39E">salesforce.com/resources/research-reports/state-of-sales</span></div>
+        <div class="pr-src"><strong>Alexander Group</strong> &mdash; Sales compensation design &amp; admin costs<br><span style="color:#48C39E">alexandergroup.com/insights/sales-compensation</span></div>
+        <div class="pr-src"><strong>Incentive Research Foundation</strong> &mdash; Comp plan design research<br><span style="color:#48C39E">theirf.org/research</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="pr-sec">Estimated Annual Costs</div><div id="pr-cost-rows"></div>
+      <div class="pr-total-row"><span>Total Annual Impact</span><span class="pr-total-amt" id="pr-total-full">$2,432,333</span></div>
+      <div style="margin-top:14px">
+        <div class="pr-sec">Cost Distribution</div>
+        <div style="display:flex;justify-content:center;margin:10px 0 8px"><svg id="pr-donut" width="160" height="160"></svg></div>
+        <div id="pr-legend"></div>
+      </div>
+    </div>
+  </div>
+  <div class="pr-footer"><span>Generated by the Everstage Comp Plan Error Impact Calculator.</span><span>everstage.com</span></div>
+</div>
+
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────
+const HS_PORTAL    = "20190244";
+const HS_FORM      = "db258fc3-42e5-44b1-990d-96351809a729";
+const N8N_WEBHOOK  = "YOUR_N8N_WEBHOOK_URL"; // ⚠ Paste your n8n Production Webhook URL here (vigneshparthiban.app.n8n.cloud → 'Comp Calculator — Lead Email' → Webhook trigger node → Copy Production URL) // e.g. https://your-n8n.com/webhook/comp-calculator-lead
+
+// ── ICM PRESETS ───────────────────────────────────────────────────
+const LOCKED_ICM = "spreadsheet";
+const ICM = {
+  spreadsheet: { label:"Spreadsheets",    errorRate:8,   adminHours:120, adminRate:50, legalRisk:25, compDriven:31 },
+  inhouse:     { label:"In-House Tool",   errorRate:6,   adminHours:90,  adminRate:65, legalRisk:22, compDriven:28 },
+  legacy:      { label:"Legacy ICM",      errorRate:4,   adminHours:60,  adminRate:50, legalRisk:18, compDriven:24 },
+  homegrown:   { label:"Homegrown/Legacy",errorRate:5,   adminHours:70,  adminRate:50, legalRisk:20, compDriven:28 },
+  basic:       { label:"Basic ICM",       errorRate:2.5, adminHours:40,  adminRate:50, legalRisk:15, compDriven:22 },
+  modern:      { label:"Modern ICM",      errorRate:1.5, adminHours:25,  adminRate:50, legalRisk:10, compDriven:15 },
+};
+const CAT_COLOR = {
+  'Calculation Errors':'#E04355','Admin Overhead':'#E04355',
+  'Turnover Replacement':'#072A6C','Ramp Productivity Loss':'#072A6C',
+  'Revenue Leakage (Gaming)':'#48C39E','Legal & Dispute Risk':'#48C39E'
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────
+const fmt = n => n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1e3?'$'+Math.round(n/1e3)+'K':'$'+Math.round(n);
+const fmtFull = n => '$'+Math.round(n).toLocaleString('en-US');
+const f = n => n.toFixed(1);
+const g = id => document.getElementById(id);
+const setText = (id,v) => { const e=g(id); if(e) e.textContent=v; };
+const setHTML = (id,v) => { const e=g(id); if(e) e.innerHTML=v; };
+const getNum  = id => parseFloat(g(id)?.value)||0;
+
+// ── CALCULATE ─────────────────────────────────────────────────────
+function calc() {
+  const teamSize = getNum('f-teamSize');
+  const avgOTE   = getNum('f-avgOTE');
+  const basePct  = getNum('f-basePct')/100;
+  const revenue  = getNum('f-revenue');
+  const errRate  = getNum('f-errorRate')/100;
+  const adminH   = getNum('f-adminHours');
+  const adminR   = getNum('f-adminRate');
+  const turnover = getNum('f-turnover')/100;
+  const compDriv = getNum('f-compDriven')/100;
+  const replMult = getNum('f-replMult')/10;
+  const ramp     = getNum('f-ramp');
+  const gaming   = getNum('f-gaming')/100;
+  const legal    = getNum('f-legal')/100;
+  const legalCost= getNum('f-legalCost');
+
+  const varPay    = avgOTE*(1-basePct);
+  const totalVar  = varPay*teamSize;
+  const base      = avgOTE*basePct;
+  const calcErrs  = totalVar*errRate;
+  const adminOH   = adminH*adminR*12;
+  const totalTurn = Math.round(teamSize*turnover);
+  const compTurn  = Math.round(totalTurn*compDriv);
+  const replCost  = base*replMult;
+  const turnCost  = compTurn*replCost;
+  const mthRev    = revenue/teamSize/12;
+  const rampLoss  = compTurn*mthRev*ramp*0.5;
+  const gamingL   = revenue*gaming;
+  const legalR    = legal*legalCost;
+  const total     = calcErrs+adminOH+turnCost+rampLoss+gamingL+legalR;
+  const revPct    = revenue>0?total/revenue*100:0;
+
+  const breakdown = [
+    {name:'Revenue Leakage (Gaming)',value:gamingL},
+    {name:'Ramp Productivity Loss',  value:rampLoss},
+    {name:'Turnover Replacement',    value:turnCost},
+    {name:'Calculation Errors',      value:calcErrs},
+    {name:'Admin Overhead',          value:adminOH},
+    {name:'Legal & Dispute Risk',    value:legalR},
+  ].sort((a,b)=>b.value-a.value);
+
+  const pie = [
+    {name:'Direct Costs',    value:calcErrs+adminOH,  color:'#E04355'},
+    {name:'Attrition Costs', value:turnCost+rampLoss, color:'#072A6C'},
+    {name:'Hidden Costs',    value:gamingL+legalR,    color:'#48C39E'},
+  ];
+
+  return {teamSize,avgOTE,basePct,revenue,errRate,adminH,adminR,turnover,compDriv,
+          replMult,ramp,gaming,legal,legalCost,varPay,totalVar,base,calcErrs,
+          adminOH,totalTurn,compTurn,replCost,turnCost,rampLoss,gamingL,legalR,
+          total,revPct,breakdown,pie};
+}
+
+// ── SVG DONUT ─────────────────────────────────────────────────────
+function donutSVG(pie, sz) {
+  const cx=sz/2,cy=sz/2,or=sz*.42,ir=sz*.27;
+  const tot=pie.reduce((s,d)=>s+d.value,0);
+  if(!tot) return `<svg width="${sz}" height="${sz}"><circle cx="${cx}" cy="${cy}" r="${or}" fill="#E5E7EB"/><circle cx="${cx}" cy="${cy}" r="${ir}" fill="white"/></svg>`;
+  let ang=-Math.PI/2,paths='';
+  pie.forEach(d=>{
+    const sw=(d.value/tot)*2*Math.PI,ea=ang+sw-0.025;
+    const c1=Math.cos(ang),s1=Math.sin(ang),c2=Math.cos(ea),s2=Math.sin(ea);
+    paths+=`<path d="M${f(cx+or*c1)},${f(cy+or*s1)} A${or},${or} 0 ${sw>Math.PI?1:0},1 ${f(cx+or*c2)},${f(cy+or*s2)} L${f(cx+ir*c2)},${f(cy+ir*s2)} A${ir},${ir} 0 ${sw>Math.PI?1:0},0 ${f(cx+ir*c1)},${f(cy+ir*s1)}Z" fill="${d.color}" stroke="white" stroke-width="2"/>`;
+    ang+=sw;
+  });
+  const fs=sz>150?13:10;
+  return `<svg width="${sz}" height="${sz}">${paths}<text x="${cx}" y="${cy-4}" text-anchor="middle" style="font-size:${fs}px;font-weight:800;fill:#30312F">${fmt(tot)}</text><text x="${cx}" y="${cy+11}" text-anchor="middle" style="font-size:9px;fill:#6B7280">Total</text></svg>`;
+}
+
+function legendHTML(pie,total) {
+  return pie.map(d=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 6px;border-radius:5px;margin-bottom:3px"><div style="display:flex;align-items:center;gap:7px"><div style="width:9px;height:9px;border-radius:2px;background:${d.color};flex-shrink:0"></div><span style="font-size:11px;color:#30312F">${d.name}</span></div><div><span style="font-size:11px;font-weight:700;color:${d.color}">${fmt(d.value)}</span><span style="font-size:10px;color:#9CA3AF;margin-left:4px">${total>0?(d.value/total*100).toFixed(0):0}%</span></div></div>`).join('');
+}
+
+function breakdownHTML(items,total) {
+  return items.map(item=>{
+    const w=total>0?(item.value/total*100):0;
+    const col=CAT_COLOR[item.name]||'#072A6C';
+    return `<div class="br-row"><div class="br-top"><span class="br-name">${item.name}</span><div class="br-right"><span class="br-amt" style="color:${col}">${fmtFull(item.value)}</span><span class="br-pct">${w.toFixed(0)}%</span></div></div><div class="br-track"><div class="br-fill" style="width:${w}%;background:${col}"></div></div></div>`;
+  }).join('');
+}
+
+// ── RENDER ────────────────────────────────────────────────────────
+function render() {
+  const r = calc();
+  const icmKey = LOCKED_ICM;
+  const icmLabel = ICM[icmKey].label;
+
+  // Sidebar derived
+  setText('d-varPay',  fmt(r.varPay));
+  setText('d-totalVar',fmt(r.totalVar));
+  setText('d-revRep',  fmt(r.revenue/r.teamSize));
+  setText('d-compRatio',((r.avgOTE*r.teamSize)/r.revenue*100).toFixed(1)+'%');
+  const dRev=g('d-revenue'); if(dRev) dRev.textContent='($'+Math.round(r.revenue).toLocaleString('en-US')+')';
+
+
+  // ── How We Calculated This ──────────────────────────────────────────────
+  const varBudget = r.varPay * r.teamSize;
+  const mthRevRep = Math.round(r.revenue / r.teamSize / 12);
+  setText('math-calcerrs',
+    r.teamSize + ' reps × ' + fmt(r.varPay) + ' variable × ' + (r.errRate*100).toFixed(1) + '% = ' + fmtFull(r.calcErrs));
+  g('math-calcerrs').innerHTML = r.teamSize + ' reps × ' + fmt(r.varPay) + ' variable pay × ' + (r.errRate*100).toFixed(1) + '% error rate = <strong style="color:#30312F">' + fmtFull(r.calcErrs) + '</strong><em>variable budget × error rate</em>';
+  g('math-admin').innerHTML = r.adminH + ' hrs/mo × $' + r.adminR + '/hr × 12 months = <strong style="color:#30312F">' + fmtFull(r.adminOH) + '</strong><em>hrs/month × hourly rate × 12 months</em>';
+  g('math-turnover').innerHTML = r.compTurn + ' comp-driven departures × ' + fmtFull(r.replCost) + '/rep = <strong style="color:#30312F">' + fmtFull(r.turnCost) + '</strong><em>' + r.teamSize + ' reps × ' + (r.turnover*100).toFixed(0) + '% turnover × ' + (r.compDriv*100).toFixed(0) + '% comp-driven = ' + r.compTurn + ' departures</em>';
+  g('math-ramp').innerHTML = r.compTurn + ' departures × ' + fmtFull(mthRevRep) + '/mo rev × ' + r.ramp + ' mo ramp × 50% = <strong style="color:#30312F">' + fmtFull(r.rampLoss) + '</strong><em>new hires at ~50% capacity during ramp period</em>';
+  g('math-gaming').innerHTML = fmtFull(r.revenue) + ' revenue × ' + (r.gaming*100).toFixed(1) + '% gaming loss = <strong style="color:#30312F">' + fmtFull(r.gamingL) + '</strong><em>sandbagging, deal-deferral &amp; cherry-picking behaviours</em>';
+  g('math-legal').innerHTML = (r.legal*100).toFixed(1) + '% probability × ' + fmtFull(r.legalCost) + ' avg cost = <strong style="color:#30312F">' + fmtFull(r.legalR) + '</strong><em>probability-weighted annual exposure</em>';
+  setText('math-total', fmtFull(r.total));
+
+  // Stats
+  setText('s-total',    fmt(r.total));
+  setText('s-total-sub',r.revPct.toFixed(1)+'% of revenue');
+  setText('s-dep',      r.compTurn+' reps/yr');
+  setText('s-dep-sub',  r.totalTurn+' total turnover');
+  setText('s-cpd',      fmt(r.replCost));
+  setText('s-cpd-sub',  r.replMult.toFixed(1)+'x base salary');
+
+  // Charts
+  const bHTML = breakdownHTML(r.breakdown,r.total);
+  const dHTML = donutSVG(r.pie,190);
+  const lHTML = legendHTML(r.pie,r.total);
+  setHTML('rep-breakdown', bHTML); setHTML('rep-donut', dHTML); setHTML('rep-legend', lHTML);
+  setText('rep-total',fmtFull(r.total));
+  renderBenchmarks(r, icmKey);
+
+  // Print
+  setText('pr-total',    fmt(r.total));
+  setText('pr-total-sub','TOTAL ANNUAL IMPACT ('+r.revPct.toFixed(1)+'% of revenue)');
+  setText('pr-dep',      r.compTurn+' reps/yr');
+  setText('pr-dep-sub',  r.totalTurn+' total turnover');
+  setText('pr-cpd',      fmt(r.replCost));
+  setText('pr-cpd-sub',  r.replMult.toFixed(1)+'x base salary');
+  setText('pr-tool',     icmLabel);
+  setText('pr-err-rate', 'Error rate: '+(r.errRate*100).toFixed(1)+'%');
+  setText('pr-total-full',fmtFull(r.total));
+
+  setHTML('pr-inp-tbl',[
+    ['Sales Team Size',r.teamSize+' reps'],['Average OTE',fmtFull(r.avgOTE)],
+    ['Base / Variable Split',Math.round(r.basePct*100)+'/'+Math.round((1-r.basePct)*100)],
+    ['Annual Revenue',fmtFull(r.revenue)],['ICM Tool',icmLabel],
+  ].map(([k,v])=>`<tr><td style="color:#6B7280">${k}</td><td style="text-align:right;font-weight:700">${v}</td></tr>`).join(''));
+
+  setHTML('pr-assm-tbl',[
+    ['Commission Error Rate',(r.errRate*100).toFixed(1)+'%'],
+    ['Admin Hours / Month',r.adminH+' hrs'],['Admin Hourly Rate','$'+r.adminR+'/hr'],
+    ['Annual Turnover Rate',(r.turnover*100).toFixed(1)+'%'],
+    ['Comp-Driven Turnover %',(r.compDriv*100).toFixed(1)+'%'],
+    ['Replacement Multiplier',r.replMult.toFixed(1)+'x base'],
+    ['New Hire Ramp Time',r.ramp+' months'],
+    ['Gaming/Sandbagging Loss',(r.gaming*100).toFixed(1)+'%'],
+    ['Legal Issue Probability',(r.legal*100).toFixed(1)+'%'],
+    ['Avg Legal Cost',fmtFull(r.legalCost)],
+  ].map(([k,v])=>`<tr><td style="color:#6B7280;padding:2px 0">${k}</td><td style="text-align:right;font-weight:600">${v}</td></tr>`).join(''));
+
+  setHTML('pr-cost-rows',r.breakdown.map(item=>{
+    const w=r.total>0?(item.value/r.total*100):0;
+    const col=CAT_COLOR[item.name]||'#072A6C';
+    return `<div class="pr-crow"><div class="pr-ctop"><span class="pr-clbl">${item.name}</span><span class="pr-camt" style="color:${col}">${fmtFull(item.value)}</span></div><div class="pr-cbg"><div class="pr-cfg" style="width:${w.toFixed(1)}%;background:${col}"></div></div><div class="pr-cpct">${w.toFixed(0)}%</div></div>`;
+  }).join(''));
+
+  // Print donut
+  const prD=g('pr-donut');
+  if(prD){
+    const sz=160,pcx=80,pcy=80,por=66,pir=42,pt=r.pie.reduce((s,d)=>s+d.value,0);
+    let pang=-Math.PI/2,pp='';
+    r.pie.forEach(d=>{
+      const sw=(d.value/pt)*2*Math.PI,ea=pang+sw-0.02;
+      const c1=Math.cos(pang),s1=Math.sin(pang),c2=Math.cos(ea),s2=Math.sin(ea);
+      pp+=`<path d="M${f(pcx+por*c1)},${f(pcy+por*s1)} A${por},${por} 0 ${sw>Math.PI?1:0},1 ${f(pcx+por*c2)},${f(pcy+por*s2)} L${f(pcx+pir*c2)},${f(pcy+pir*s2)} A${pir},${pir} 0 ${sw>Math.PI?1:0},0 ${f(pcx+pir*c1)},${f(pcy+pir*s1)}Z" fill="${d.color}" stroke="white" stroke-width="1.5"/>`;
+      pang+=sw;
+    });
+    prD.innerHTML=pp+`<text x="${pcx}" y="${pcy-4}" text-anchor="middle" style="font-size:12px;font-weight:800;fill:#30312F">${fmt(r.pie.reduce((s,d)=>s+d.value,0))}</text><text x="${pcx}" y="${pcy+11}" text-anchor="middle" style="font-size:9px;fill:#6B7280">Total</text>`;
+  }
+  setHTML('pr-legend',r.pie.map(d=>`<div class="pr-di"><div class="pr-dot" style="background:${d.color}"></div><span style="flex:1">${d.name}</span><strong style="color:${d.color}">${fmt(d.value)}</strong><span style="color:#6B7280;margin-left:4px">(${r.total>0?(d.value/r.total*100).toFixed(0):0}%)</span></div>`).join(''));
+}
+
+
+// ── PEER BENCHMARKS ───────────────────────────────────────────────
+const BENCHMARKS = {
+  spreadsheet: { errRate:[7.2,1.5], adminHrs:[115,22], compTurn:[30,12], costPctRev:[10,3] },
+  homegrown:   { errRate:[5.8,1.5], adminHrs:[80,22],  compTurn:[27,12], costPctRev:[8,3]  },
+  inhouse:     { errRate:[5.8,1.5], adminHrs:[80,22],  compTurn:[27,12], costPctRev:[8,3]  },
+  basic:       { errRate:[3.1,1.5], adminHrs:[42,22],  compTurn:[23,12], costPctRev:[7,3]  },
+  legacy:      { errRate:[4.2,1.5], adminHrs:[65,22],  compTurn:[25,12], costPctRev:[8,3]  },
+  modern:      { errRate:[1.8,0.8], adminHrs:[26,18],  compTurn:[17,10], costPctRev:[5,2]  },
+};
+
+function renderBenchmarks(r, icmKey) {
+  const bc = document.getElementById('bench-card');
+  if(!bc) return;
+  const bm = BENCHMARKS[icmKey] || BENCHMARKS.spreadsheet;
+  const rows = [
+    { metric:'Commission Error Rate',
+      note:'Gartner: manual processes avg 3–8% error rate; modern ICM under 2%',
+      youVal:r.errRate*100, peerVal:bm.errRate[0], bestVal:bm.errRate[1],
+      youFmt:(r.errRate*100).toFixed(1)+'%', peerFmt:bm.errRate[0]+'%', bestFmt:bm.errRate[1]+'%' },
+    { metric:'Admin Time per Month',
+      note:'Alexander Group: best-in-class teams spend under 25 hrs/mo on comp admin',
+      youVal:r.adminH, peerVal:bm.adminHrs[0], bestVal:bm.adminHrs[1],
+      youFmt:r.adminH+' hrs', peerFmt:bm.adminHrs[0]+' hrs', bestFmt:bm.adminHrs[1]+' hrs' },
+    { metric:'Comp-Driven Attrition',
+      note:'Salesforce SoS: comp transparency orgs see 40% lower comp-driven attrition',
+      youVal:r.compDriv*100, peerVal:bm.compTurn[0], bestVal:bm.compTurn[1],
+      youFmt:(r.compDriv*100).toFixed(0)+'%', peerFmt:bm.compTurn[0]+'%', bestFmt:bm.compTurn[1]+'%' },
+    { metric:'Total Cost as % of Revenue',
+      note:'Everstage data: customers reduce total comp leakage to under 3% within 12 months',
+      youVal:r.revPct, peerVal:bm.costPctRev[0], bestVal:bm.costPctRev[1],
+      youFmt:r.revPct.toFixed(1)+'%', peerFmt:bm.costPctRev[0]+'%', bestFmt:bm.costPctRev[1]+'%' },
+  ];
+  bc.innerHTML = rows.map(row => {
+    const mx = Math.max(row.youVal, row.peerVal) * 1.15 || 1;
+    const yp = Math.min(row.youVal/mx*100,100).toFixed(1);
+    const pp = Math.min(row.peerVal/mx*100,100).toFixed(1);
+    const bp = Math.min(row.bestVal/mx*100,100).toFixed(1);
+    const diff = row.youVal - row.peerVal;
+    const cls  = row.youVal <= row.bestVal*1.05 ? 'better' : diff > row.peerVal*0.05 ? 'worse' : 'neutral';
+    const vs   = Math.abs(diff) < row.peerVal*0.05 ? 'On par with peers'
+               : diff > 0 ? '+'+(diff).toFixed(1).replace(/\.0$/,'')+' vs peers ↑'
+               : (diff).toFixed(1).replace(/\.0$/,'')+' vs peers ↓';
+    return '<div class="bench-row">'
+      +'<div class="bench-metric">'+row.metric+'<div class="bench-row-note">'+row.note+'</div></div>'
+      +'<div class="bench-bar-wrap">'
+      +'<div class="bench-bar-row"><div class="bench-bar-tag" style="color:#E04355">Your Org</div>'
+      +'<div class="bench-bar-track"><div class="bench-bar-fill" style="width:'+yp+'%;background:#E04355"></div></div>'
+      +'<div class="bench-bar-lbl" style="color:#E04355">'+row.youFmt+'</div></div>'
+      +'<div class="bench-bar-row"><div class="bench-bar-tag" style="color:#9CA3AF">Peer Avg</div>'
+      +'<div class="bench-bar-track"><div class="bench-bar-fill" style="width:'+pp+'%;background:#9CA3AF"></div></div>'
+      +'<div class="bench-bar-lbl" style="color:#9CA3AF">'+row.peerFmt+'</div></div>'
+      +'<div class="bench-bar-row"><div class="bench-bar-tag" style="color:#48C39E">Best-in-Class</div>'
+      +'<div class="bench-bar-track"><div class="bench-bar-fill" style="width:'+bp+'%;background:#48C39E"></div></div>'
+      +'<div class="bench-bar-lbl" style="color:#48C39E">'+row.bestFmt+'</div></div>'
+      +'</div>'
+      +'<div class="bench-delta '+cls+'">'+vs+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────
+function bindSlider(id, dispId, fn) {
+  const el=g(id); if(!el) return;
+  el.addEventListener('input',()=>{ const dp=g(dispId); if(dp) dp.textContent=fn(parseFloat(el.value)); render(); });
+}
+function bindNum(id) { const el=g(id); if(el) el.addEventListener('input',render); }
+
+window.addEventListener('DOMContentLoaded',()=>{
+  bindSlider('f-avgOTE',    'd-avgOTE',    v=>'$'+Math.round(v).toLocaleString('en-US'));
+  bindSlider('f-basePct',   'd-basePct',   v=>Math.round(v)+' / '+(100-Math.round(v)));
+  bindSlider('f-errorRate', 'd-errorRate', v=>f(v)+'%');
+  bindSlider('f-turnover',  'd-turnover',  v=>f(v)+'%');
+  bindSlider('f-compDriven','d-compDriven',v=>f(v)+'%');
+  bindSlider('f-replMult',  'd-replMult',  v=>(v/10).toFixed(1)+'x base');
+  bindSlider('f-ramp',      'd-ramp',      v=>v+' months');
+  bindSlider('f-gaming',    'd-gaming',    v=>f(v)+'%');
+  bindSlider('f-legal',     'd-legal',     v=>f(v)+'%');
+
+  ['f-teamSize','f-revenue','f-adminRate'].forEach(bindNum);
+  bindSlider('f-adminHours','d-adminHours', v=>Math.round(v)+' hrs');
+  bindSlider('f-legalCost', 'd-legalCost',  v=>'$'+Math.round(v).toLocaleString('en-US'));
+
+  // ICM tool locked — no switcher
+
+  g('email-form').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const emailEl=g('email-inp'),errEl=g('email-err'),btn=g('submit-btn');
+    const email=emailEl.value.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      emailEl.classList.add('err');
+      errEl.textContent='Please enter a valid work email address.';
+      errEl.style.display='block';
+      return;
+    }
+    emailEl.classList.remove('err'); errEl.style.display='none';
+    btn.disabled=true; btn.textContent='Sending your report...';
+
+    const r = calc();
+    const icmKey = LOCKED_ICM;
+    const icmLabel = ICM[icmKey].label;
+    const total = r.total;
+    const bd = r.breakdown;
+    const findCat = name => bd.find(b=>b.name===name)?.value||0;
+    const gamingV   = findCat('Revenue Leakage (Gaming)');
+    const rampV     = findCat('Ramp Productivity Loss');
+    const turnV     = findCat('Turnover Replacement');
+    const calcErrV  = findCat('Calculation Errors');
+    const adminV    = findCat('Admin Overhead');
+    const legalV    = findCat('Legal & Dispute Risk');
+    const pct = (v,t) => t>0?(v/t*100).toFixed(0):0;
+
+    const payload = {
+      email,
+      // Headline figures
+      fmtTotal:   fmt(total),
+      revPct:     r.revPct.toFixed(1),
+      compTurn:   r.compTurn,
+      totalTurn:  r.totalTurn,
+      fmtReplCost:fmtFull(r.replCost),
+      replMult:   r.replMult.toFixed(1),
+      icmLabel,
+      errRatePct: (r.errRate*100).toFixed(1),
+      // Breakdown
+      fmtGamingL: fmtFull(gamingV),  pctGaming: pct(gamingV,total),
+      fmtRampLoss:fmtFull(rampV),    pctRamp:   pct(rampV,total),
+      fmtTurnCost:fmtFull(turnV),    pctTurn:   pct(turnV,total),
+      fmtCalcErrs:fmtFull(calcErrV), pctCalc:   pct(calcErrV,total),
+      fmtAdminOH: fmtFull(adminV),   pctAdmin:  pct(adminV,total),
+      fmtLegalR:  fmtFull(legalV),   pctLegal:  pct(legalV,total),
+      // Inputs summary
+      teamSize:   r.teamSize,
+      fmtOTE:     fmtFull(r.avgOTE),
+      baseSplit:  Math.round(r.basePct*100)+'/'+Math.round((1-r.basePct)*100),
+      fmtRevenue: fmtFull(r.revenue),
+    };
+
+    // 1. HubSpot lead capture
+    try {
+      await fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${HS_PORTAL}/${HS_FORM}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({fields:[{name:'email',value:email}],context:{pageUri:window.location.href,pageName:'Comp Plan Error Impact Calculator'}})
+      });
+    } catch(_){}
+
+    // 2. n8n webhook → automated email to lead
+    try {
+      if(N8N_WEBHOOK && !N8N_WEBHOOK.startsWith('YOUR_')) {
+        await fetch(N8N_WEBHOOK,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(payload)
+        });
+      }
+    } catch(_){}
+
+    // 3. Unlock report
+    btn.disabled=false;
+    g('gate-section').style.display='none';
+    g('report-section').style.display='block';
+    _floatUnlocked=true;
+    g('gate-section').style.display='none';
+    g('report-section').style.display='block';
+    g('float-locked').style.display='none';
+    g('float-unlocked').style.display='block';
+    if(floatGate){floatGate.style.opacity='1';floatGate.style.pointerEvents='all';}
+
+    // 4. Auto-trigger print dialog (save as PDF)
+    setTimeout(()=>{ window.print(); }, 800);
+  });
+
+
+
+  render();
+
+  // Floating bar: hide when gate/report section enters view, show when not
+  let _floatUnlocked = false;
+  const floatGate = g('float-gate');
+  function updateFloat() {
+    if (!floatGate || _floatUnlocked) return;
+    const gs = g('gate-section');
+    const gateOpen = gs && gs.style.display !== 'none';
+    if (!gateOpen) return; // already unlocked, scroll listener not needed
+    const rect = gs.getBoundingClientRect();
+    const gateInView = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
+    floatGate.style.opacity = gateInView ? '0' : '1';
+    floatGate.style.pointerEvents = gateInView ? 'none' : 'all';
+    floatGate.style.transition = 'opacity .25s';
+  }
+  window.addEventListener('scroll', updateFloat, { passive: true });
+  updateFloat();
+
+});
+</script>
+</body>
+</html>
