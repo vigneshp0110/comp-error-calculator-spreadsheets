@@ -1106,6 +1106,23 @@ function bindSlider(id, dispId, fn) {
 }
 function bindNum(id) { const el=g(id); if(el) el.addEventListener('input',render); }
 
+// ── PRINT: forcibly hide all screen elements before Chrome renders print layout
+window.addEventListener('beforeprint', function() {
+  var hide = function(el) {
+    if (el) { el.style.setProperty('display','none','important'); el.style.setProperty('visibility','hidden','important'); }
+  };
+  hide(document.querySelector('.screen-only'));
+  hide(document.getElementById('float-gate'));
+  document.querySelectorAll('input, select, textarea').forEach(function(el){ el.style.setProperty('display','none','important'); });
+  // Force scrollbars off on any overflow containers
+  document.querySelectorAll('.sidebar, .app, .results').forEach(function(el){ el.style.overflow='hidden'; });
+});
+window.addEventListener('afterprint', function() {
+  // Restore screen-only visibility after print dialog closes
+  var so = document.querySelector('.screen-only');
+  if (so) { so.style.removeProperty('display'); so.style.removeProperty('visibility'); }
+});
+
 window.addEventListener('DOMContentLoaded',()=>{
   bindSlider('f-avgOTE',    'd-avgOTE',    v=>'$'+Math.round(v).toLocaleString('en-US'));
   bindSlider('f-basePct',   'd-basePct',   v=>Math.round(v)+' / '+(100-Math.round(v)));
