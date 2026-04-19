@@ -196,8 +196,9 @@ input[type=range].compact{height:3px;margin:0}
   html{overflow:hidden!important}
   *{scrollbar-width:none}
   ::-webkit-scrollbar{display:none!important;width:0!important}
-  .float-gate,.float-gate *,.sidebar,.sidebar *{display:none!important;visibility:hidden!important;position:static!important}
-  #float-gate,#float-gate *{display:none!important;visibility:hidden!important;position:static!important}
+  .float-gate,.float-gate *,.sidebar,.sidebar *{display:none!important;visibility:hidden!important;position:static!important;height:0!important;max-height:0!important;overflow:hidden!important;opacity:0!important}
+  #float-gate,#float-gate *{display:none!important;visibility:hidden!important;position:static!important;height:0!important;max-height:0!important;overflow:hidden!important;opacity:0!important}
+  .screen-only{height:0!important;max-height:0!important;overflow:hidden!important}
   input[type=range]{display:none!important}
   @page{margin:.45in .45in .45in .45in;size:letter}
   .pr{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#30312F;font-size:11px}
@@ -667,7 +668,7 @@ input[type=number]:focus{background:#FAFBFC}
           <div><div class="ub-title">Benchmarks unlocked</div><div class="ub-sub">See how you compare &mdash; adjust inputs to explore scenarios</div></div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <button class="pdf-btn" onclick="window.print()">
+          <button class="pdf-btn" onclick="triggerPrint()">
             <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M1 5h13v6H1V5zM3 11v3h9v-3" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
             Download PDF Report
           </button>
@@ -697,7 +698,7 @@ input[type=number]:focus{background:#FAFBFC}
             <div class="float-bar-sub">Your personalised PDF is ready</div>
           </div>
           <div style="flex:1"></div>
-          <button class="float-pdf-btn" onclick="window.print()">
+          <button class="float-pdf-btn" onclick="triggerPrint()">
             <svg width="13" height="13" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M1 5h13v6H1V5zM3 11v3h9v-3" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
             Download PDF Report
           </button>
@@ -1110,43 +1111,61 @@ function bindSlider(id, dispId, fn) {
 }
 function bindNum(id) { const el=g(id); if(el) el.addEventListener('input',render); }
 
-// ── PRINT: completely remove sticky/positioned elements from DOM to prevent Chrome bleed
+// ── PRINT: remove sticky DOM nodes BEFORE Chrome computes print layout ──────────
+// Chrome snapshots position:sticky BEFORE beforeprint fires, so we must
+// physically remove those elements prior to calling window.print().
 var _printRemoved = [];
-window.addEventListener('beforeprint', function() {
-  // Physically detach float-gate and sidebar from the DOM so Chrome's print renderer
-  // cannot compute position:sticky and bleed them onto print pages
-  var toRemove = [
-    document.getElementById('float-gate'),
-    document.querySelector('.sidebar')
-  ];
-  toRemove.forEach(function(el) {
+
+function _removePrintBloat() {
+  if (_printRemoved.length) return; // already removed
+  var targets = ['float-gate'];
+  targets.forEach(function(id) {
+    var el = document.getElementById(id);
     if (el && el.parentNode) {
       _printRemoved.push({ el: el, parent: el.parentNode, next: el.nextSibling });
       el.parentNode.removeChild(el);
     }
   });
-  // Also hide the whole screen-only wrapper
+  // Also collapse screen-only so it contributes zero layout height
   var so = document.querySelector('.screen-only');
   if (so) {
     so.style.setProperty('display','none','important');
     so.style.setProperty('visibility','hidden','important');
+    so.style.setProperty('height','0','important');
+    so.style.setProperty('overflow','hidden','important');
   }
-  document.querySelectorAll('input, select, textarea').forEach(function(el){ el.style.setProperty('display','none','important'); });
-});
-window.addEventListener('afterprint', function() {
-  // Reattach removed elements
+}
+
+function _restorePrintBloat() {
   _printRemoved.forEach(function(item) {
-    if (item.next) {
-      item.parent.insertBefore(item.el, item.next);
-    } else {
-      item.parent.appendChild(item.el);
-    }
+    try {
+      if (item.next && item.next.parentNode === item.parent) {
+        item.parent.insertBefore(item.el, item.next);
+      } else {
+        item.parent.appendChild(item.el);
+      }
+    } catch(e) {}
   });
   _printRemoved = [];
-  // Restore screen-only visibility
   var so = document.querySelector('.screen-only');
-  if (so) { so.style.removeProperty('display'); so.style.removeProperty('visibility'); }
-});
+  if (so) {
+    so.style.removeProperty('display');
+    so.style.removeProperty('visibility');
+    so.style.removeProperty('height');
+    so.style.removeProperty('overflow');
+  }
+}
+
+// triggerPrint: called by all print buttons — removes bloat FIRST, then prints
+function triggerPrint() {
+  _removePrintBloat();
+  // Tiny delay so Chrome reflows before opening print dialog
+  setTimeout(function() { window.print(); }, 50);
+}
+
+// beforeprint: fallback for Ctrl+P / browser menu print
+window.addEventListener('beforeprint', _removePrintBloat);
+window.addEventListener('afterprint', _restorePrintBloat);
 
 window.addEventListener('DOMContentLoaded',()=>{
   bindSlider('f-avgOTE',    'd-avgOTE',    v=>'$'+Math.round(v).toLocaleString('en-US'));
@@ -1247,7 +1266,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     if(floatGate){floatGate.style.opacity='1';floatGate.style.pointerEvents='all';}
 
     // 4. Auto-trigger print dialog (save as PDF)
-    setTimeout(()=>{ window.print(); }, 800);
+    setTimeout(()=>{ triggerPrint(); }, 800);
   });
 
 
