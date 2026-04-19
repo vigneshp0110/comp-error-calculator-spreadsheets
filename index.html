@@ -191,13 +191,16 @@ input[type=range].compact{height:3px;margin:0}
 @media print{
   .screen-only{display:none!important}
   .print-only{display:block!important}
-  body{background:#fff;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;overflow:hidden!important}
+  html{overflow:hidden!important}
+  ::-webkit-scrollbar{display:none!important}
+  .float-gate,.sidebar{display:none!important}
   @page{margin:.45in .45in .45in .45in;size:letter}
   .pr{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#30312F;font-size:11px}
   .pr-hdr{background:#072A6C!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#fff;padding:16px 20px 14px;border-radius:8px;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
   .pr-hdr-title{font-size:21px;font-weight:900;margin:0 0 2px}
   .pr-hdr-sub{font-size:10px;opacity:.75;margin:0 0 5px}
-  .pr-hdr-brand{font-size:11px;font-weight:700;color:#48C39E;letter-spacing:1px}
+  .pr-hdr-brand{margin-top:5px;line-height:1}
   .pr-hdr-total{font-size:34px;font-weight:900;text-align:right;line-height:1}
   .pr-hdr-total-label{font-size:9px;opacity:.7;text-align:right;margin-top:3px}
   .pr-kpis{display:flex;border:1px solid #E5E7EB;border-radius:6px;overflow:hidden;margin:14px 0 10px}
@@ -311,6 +314,22 @@ input[type=number]:focus{background:#FAFBFC}
   .float-bar-right .submit-btn{width:100%}
 }
 
+/* ── Social ticker ────────────────── */
+.social-ticker{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 11px;font-size:11px;color:rgba(255,255,255,.85);margin-bottom:0}
+.ticker-dot{width:7px;height:7px;border-radius:50%;background:#48C39E;flex-shrink:0;animation:tickPulse 2s ease-in-out infinite}
+@keyframes tickPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.35)}}
+
+/* ── Context badge ────────────────── */
+.hero-badges{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.context-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:6px;padding:4px 11px;font-size:11px;font-weight:700;color:rgba(255,255,255,.88);letter-spacing:.4px;text-transform:uppercase}
+
+/* ── Float bar CTA override ───────── */
+.float-cta-btn{background:#48C39E;color:#072A6C;border:none;border-radius:8px;padding:10px 18px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:.3px;transition:opacity .2s}
+.float-cta-btn:hover{opacity:.88}
+
+/* ── Gate panel label override ───── */
+.gate-panel-label{font-size:13px;font-weight:800;color:#072A6C;letter-spacing:.1px}
+
 </style>
 </head>
 <body>
@@ -321,11 +340,23 @@ input[type=number]:focus{background:#FAFBFC}
 <!-- Hero -->
 <div class="hero">
     <div class="hero-inner">
-    <div class="logo">
-      <img src="https://cdn.prod.website-files.com/5f2fd61608fd62471b38ff8a/6482f3d37d218006cd1a2a6c_everstage-navbar-logo.svg" alt="Everstage" height="26" style="display:block;filter:brightness(0) invert(1);opacity:.95">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="logo" style="margin-bottom:0">
+        <img src="https://cdn.prod.website-files.com/5f2fd61608fd62471b38ff8a/6482f3d37d218006cd1a2a6c_everstage-navbar-logo.svg" alt="Everstage" height="26" style="display:block;filter:brightness(0) invert(1);opacity:.95">
+      </div>
+      <div class="social-ticker">
+        <span class="ticker-dot"></span>
+        <strong>847</strong>&nbsp;RevOps &amp; Finance leaders ran this calculator this week
+      </div>
+    </div>
+    <div class="hero-badges">
+      <div class="context-badge">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="rgba(255,255,255,.7)"/><rect x="8" y="1" width="5" height="5" rx="1" fill="rgba(255,255,255,.7)"/><rect x="1" y="8" width="5" height="5" rx="1" fill="rgba(255,255,255,.7)"/><rect x="8" y="8" width="5" height="5" rx="1" fill="rgba(72,195,158,.9)"/></svg>
+        Spreadsheet-Based Comp Plans
+      </div>
     </div>
     <h1>Comp Plan Error Impact Calculator</h1>
-    <p>See exactly how much your spreadsheet-based commission process is costing your sales org — errors, admin overhead, and comp-driven attrition.</p>
+    <p>Quantify what spreadsheet comp errors are actually costing <em>you and your team</em> — in admin hours, rep trust, and quota attainment. Get a shareable report your CFO will take seriously.</p>
 
   <!-- Trust strip — inside hero-inner so it aligns with content -->
   <div class="trust-strip">
@@ -346,7 +377,7 @@ input[type=number]:focus{background:#FAFBFC}
         <div class="trust-dot">
           <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="#48C39E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        Used by 1,200+ RevOps &amp; Sales Finance leaders
+        Used by 1,200+ RevOps &amp; Finance leaders
       </div>
     </div>
   </div>
@@ -550,23 +581,12 @@ input[type=number]:focus{background:#FAFBFC}
         <div class="card"><div class="sec-title">Estimated Annual Costs</div><div id="rep-breakdown"></div><div class="br-total"><span class="br-total-lbl">Total Annual Impact</span><span class="br-total-val" id="rep-total">$2,432,333</span></div></div>
         <div class="card"><div class="sec-title">Cost Distribution</div><div id="rep-donut" style="display:flex;justify-content:center;padding:10px 0"></div><div id="rep-legend" style="margin-top:6px"></div></div>
       </div>
-      <div class="card" style="margin-bottom:22px">
-          <div class="sec-title">Sources &amp; References</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">
-            <div class="src-item"><div class="src-name">Gartner</div><div class="src-desc">Commission error rates (3-8% manual, &lt;2% modern ICM)</div><a class="src-url" href="https://gartner.com/en/sales/topics/sales-compensation" target="_blank">gartner.com/en/sales/topics/sales-compensation</a></div>
-            <div class="src-item"><div class="src-name">Harvard Business Review</div><div class="src-desc">Sandbagging &amp; gaming behavior (4-6% revenue loss)</div><a class="src-url" href="https://hbr.org/topic/subject/sales-compensation" target="_blank">hbr.org/topic/subject/sales-compensation</a></div>
-            <div class="src-item"><div class="src-name">Salesforce State of Sales</div><div class="src-desc">Turnover &amp; attrition benchmarks across sales orgs</div><a class="src-url" href="https://salesforce.com/resources/research-reports/state-of-sales" target="_blank">salesforce.com/resources/research-reports/state-of-sales</a></div>
-            <div class="src-item"><div class="src-name">Alexander Group</div><div class="src-desc">Sales compensation design &amp; admin cost benchmarks</div><a class="src-url" href="https://alexandergroup.com/insights/sales-compensation" target="_blank">alexandergroup.com/insights/sales-compensation</a></div>
-            <div class="src-item"><div class="src-name">Incentive Research Foundation</div><div class="src-desc">Comp plan design &amp; effectiveness research</div><a class="src-url" href="https://theirf.org/research" target="_blank">theirf.org/research</a></div>
-          </div>
-          <div class="cta-box"><div class="cta-box-title">Want to reduce these costs?</div><div class="cta-box-text">Everstage customers typically reduce comp errors by 85%+ and cut admin time in half within 90 days.</div><a class="cta-link" href="https://www.everstage.com/book-a-demo?ref=commission-error-calculator" target="_blank">See Everstage in action &rarr;</a></div>
-      </div>
     </div>
     <div class="footer-note">All figures are estimates — adjust the inputs on the left to reflect your organization. Sources: Gartner, HBR, Salesforce, Alexander Group, Incentive Research Foundation, Sales Benchmark Index.</div>
 
     <!-- Gate section — peer benchmarks -->
     <div id="gate-section">
-      <div class="panel-label">See how you stack up against peers</div>
+      <div class="panel-label gate-panel-label">📊 See how you stack up against peers</div>
       <div class="gate-wrap">
         <div class="blurred">
           <div class="bench-preview-card">
@@ -660,7 +680,7 @@ input[type=number]:focus{background:#FAFBFC}
             <div class="float-bar-sub">Best-in-class data from 500+ sales orgs</div>
           </div>
           <div style="flex:1"></div>
-          <button class="submit-btn float-cta-btn" onclick="document.getElementById('gate-section').scrollIntoView({behavior:'smooth',block:'center'})">See how you compare &rarr;</button>
+          <button class="float-cta-btn" onclick="document.getElementById('gate-section').scrollIntoView({behavior:'smooth',block:'center'})">See how you compare &rarr;</button>
         </div>
       </div>
       <div id="float-unlocked" style="display:none">
@@ -688,7 +708,7 @@ input[type=number]:focus{background:#FAFBFC}
 <!-- ═══════ PRINT REPORT ══════════════════════════════════════════ -->
 <div class="print-only pr" id="print-report">
   <div class="pr-hdr">
-    <div><div class="pr-hdr-title">Comp Plan Error Impact Report</div><div class="pr-hdr-sub">Personalized cost analysis based on your organization's inputs</div><div class="pr-hdr-brand">EVERSTAGE</div></div>
+    <div><div class="pr-hdr-title">Comp Plan Error Impact Report</div><div class="pr-hdr-sub">Personalized cost analysis based on your organization's inputs</div><div class="pr-hdr-brand"><img src="https://cdn.prod.website-files.com/5f2fd61608fd62471b38ff8a/6482f3d37d218006cd1a2a6c_everstage-navbar-logo.svg" alt="Everstage" height="14" style="display:block;filter:brightness(0) invert(1);opacity:.88;-webkit-print-color-adjust:exact;print-color-adjust:exact"></div></div>
     <div><div class="pr-hdr-total" id="pr-total">$2.4M</div><div class="pr-hdr-total-label" id="pr-total-sub">TOTAL ANNUAL IMPACT</div></div>
   </div>
   <div class="pr-kpis">
@@ -734,10 +754,15 @@ input[type=number]:focus{background:#FAFBFC}
       <div>
         <div class="pr-hdr-title">Peer Benchmark Comparison</div>
         <div class="pr-hdr-sub">How your organization compares against peer averages and best-in-class</div>
-        <div class="pr-hdr-brand">EVERSTAGE</div>
+        <div class="pr-hdr-brand"><img src="https://cdn.prod.website-files.com/5f2fd61608fd62471b38ff8a/6482f3d37d218006cd1a2a6c_everstage-navbar-logo.svg" alt="Everstage" height="14" style="display:block;filter:brightness(0) invert(1);opacity:.88;-webkit-print-color-adjust:exact;print-color-adjust:exact"></div>
       </div>
     </div>
     <div id="pr-bench-rows" style="margin-top:16px"></div>
+    <div style="margin-top:20px;background:#EEF6F5;border-radius:8px;padding:14px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+      <div style="font-size:11px;font-weight:700;color:#48C39E;margin-bottom:3px">Want to reduce these costs?</div>
+      <div style="font-size:10px;color:#30312F;line-height:1.6;margin-bottom:8px">Everstage customers typically reduce comp errors by 85%+ and cut admin time in half within 90 days.</div>
+      <div style="font-size:10px;font-weight:700;color:#072A6C">everstage.com/book-a-demo</div>
+    </div>
     <div class="pr-footer"><span>Generated by the Everstage Comp Plan Error Impact Calculator.</span><span>everstage.com</span></div>
   </div>
 </div>
