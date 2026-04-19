@@ -295,10 +295,10 @@ input[type=number]:focus{background:#FAFBFC}
 .bench-left{transition:filter .4s,opacity .4s}
 .bench-left.blurred{filter:blur(5px) saturate(.4);opacity:.5;pointer-events:none;user-select:none}
 
-/* Floating bar container — sticky to bottom of results column */
-.float-gate{position:sticky;bottom:20px;z-index:20;margin-top:20px;pointer-events:none}
+/* Floating bar container — fixed to viewport bottom (avoids Chrome print sticky-bleed bug) */
+.float-gate{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;width:min(760px,calc(100vw - 48px));pointer-events:none}
 .float-gate.hidden{display:none}
-.float-bar{background:#fff;border:1px solid #E5E7EB;border-radius:14px;box-shadow:0 8px 32px rgba(7,42,108,.18),0 2px 8px rgba(0,0,0,.06);padding:14px 18px;display:flex;align-items:center;gap:14px;pointer-events:all;animation:floatIn .3s ease}
+.float-bar{background:#fff;border:1px solid #E5E7EB;border-radius:14px;box-shadow:0 8px 32px rgba(7,42,108,.18),0 2px 8px rgba(0,0,0,.06);padding:14px 18px;display:flex;align-items:center;gap:14px;pointer-events:all;animation:floatIn .3s ease;width:100%}
 @keyframes floatIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .float-bar-left{flex-shrink:0}
 .float-bar-label{font-size:11px;font-weight:700;color:#072A6C;margin-bottom:1px}
