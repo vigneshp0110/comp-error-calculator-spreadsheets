@@ -189,14 +189,15 @@ input[type=range].compact{height:3px;margin:0}
 /* ══ PRINT ══════════════════════════════════════ */
 .print-only{display:none}
 @media print{
-  .screen-only{display:none!important;visibility:hidden!important}
-  .screen-only *{display:none!important;visibility:hidden!important}
+  .screen-only{display:none!important;visibility:hidden!important;position:static!important}
+  .screen-only *{display:none!important;visibility:hidden!important;position:static!important}
   .print-only{display:block!important;visibility:visible!important}
   body{background:#fff;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;overflow:hidden!important}
   html{overflow:hidden!important}
   *{scrollbar-width:none}
   ::-webkit-scrollbar{display:none!important;width:0!important}
-  .float-gate,.float-gate *,.sidebar,.sidebar *{display:none!important;visibility:hidden!important}
+  .float-gate,.float-gate *,.sidebar,.sidebar *{display:none!important;visibility:hidden!important;position:static!important}
+  #float-gate,#float-gate *{display:none!important;visibility:hidden!important;position:static!important}
   input[type=range]{display:none!important}
   @page{margin:.45in .45in .45in .45in;size:letter}
   .pr{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#30312F;font-size:11px}
@@ -665,10 +666,13 @@ input[type=number]:focus{background:#FAFBFC}
           <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="rgba(255,255,255,0.2)"/><path d="M6 11l3.5 3.5L16 7" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <div><div class="ub-title">Benchmarks unlocked</div><div class="ub-sub">See how you compare &mdash; adjust inputs to explore scenarios</div></div>
         </div>
-        <button class="pdf-btn" onclick="window.print()">
-          <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M1 5h13v6H1V5zM3 11v3h9v-3" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
-          Download PDF Report
-        </button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <button class="pdf-btn" onclick="window.print()">
+            <svg width="14" height="14" viewBox="0 0 15 15" fill="none"><path d="M3 5V1h9v4M1 5h13v6H1V5zM3 11v3h9v-3" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            Download PDF Report
+          </button>
+          <span style="font-size:9px;color:rgba(255,255,255,.5)">In print dialog, uncheck "Headers and footers" to hide the page URL</span>
+        </div>
       </div>
       <div class="panel-label">Your peer benchmark comparison</div>
       <div class="card" style="margin-bottom:22px"><div id="bench-card"></div></div>
@@ -1106,19 +1110,40 @@ function bindSlider(id, dispId, fn) {
 }
 function bindNum(id) { const el=g(id); if(el) el.addEventListener('input',render); }
 
-// ── PRINT: forcibly hide all screen elements before Chrome renders print layout
+// ── PRINT: completely remove sticky/positioned elements from DOM to prevent Chrome bleed
+var _printRemoved = [];
 window.addEventListener('beforeprint', function() {
-  var hide = function(el) {
-    if (el) { el.style.setProperty('display','none','important'); el.style.setProperty('visibility','hidden','important'); }
-  };
-  hide(document.querySelector('.screen-only'));
-  hide(document.getElementById('float-gate'));
+  // Physically detach float-gate and sidebar from the DOM so Chrome's print renderer
+  // cannot compute position:sticky and bleed them onto print pages
+  var toRemove = [
+    document.getElementById('float-gate'),
+    document.querySelector('.sidebar')
+  ];
+  toRemove.forEach(function(el) {
+    if (el && el.parentNode) {
+      _printRemoved.push({ el: el, parent: el.parentNode, next: el.nextSibling });
+      el.parentNode.removeChild(el);
+    }
+  });
+  // Also hide the whole screen-only wrapper
+  var so = document.querySelector('.screen-only');
+  if (so) {
+    so.style.setProperty('display','none','important');
+    so.style.setProperty('visibility','hidden','important');
+  }
   document.querySelectorAll('input, select, textarea').forEach(function(el){ el.style.setProperty('display','none','important'); });
-  // Force scrollbars off on any overflow containers
-  document.querySelectorAll('.sidebar, .app, .results').forEach(function(el){ el.style.overflow='hidden'; });
 });
 window.addEventListener('afterprint', function() {
-  // Restore screen-only visibility after print dialog closes
+  // Reattach removed elements
+  _printRemoved.forEach(function(item) {
+    if (item.next) {
+      item.parent.insertBefore(item.el, item.next);
+    } else {
+      item.parent.appendChild(item.el);
+    }
+  });
+  _printRemoved = [];
+  // Restore screen-only visibility
   var so = document.querySelector('.screen-only');
   if (so) { so.style.removeProperty('display'); so.style.removeProperty('visibility'); }
 });
